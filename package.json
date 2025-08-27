@@ -1,0 +1,14 @@
+{
+  "name": "tec-test-node",
+  "version": "0.0.1",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+  "start": "nodemon app.js"
+  },
+  "author": "Cristian Sotelo",
+  "license": "ISC",
+  "dependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
