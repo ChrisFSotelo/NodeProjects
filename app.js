@@ -1,11 +1,23 @@
-const http = require('http');
-const hostname = '127.0.0.1';
+const { json } = require('body-parser');
+const express = require('express');
+const app = express();
+
+const fs = require('fs');
+
+//ubicacion del documento
+const path = require('path')
+//puerto
 const port = 8000;
 
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-type', 'text-plain');
-  res.end('mi primer API updated');
-}) 
+app.get('/api/v1/users', function(req,res){
+  const currentDir = path.join(__dirname, 'src/data/');
+  const currentFile = `${currentDir}data.json`;
 
-server.listen(port, hostname);
+  //parsear la respuesta
+  const rawData = fs.readFileSync(currentFile);
+  const response = JSON.parse(rawData);
+  
+    res.json({data: response});
+})
+
+app.listen(port);
