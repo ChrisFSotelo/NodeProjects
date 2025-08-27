@@ -1,81 +1,51 @@
+const bcrypt = require('bcrypt');
+const { User } = require('../models');
 
-const fs = require('fs');
-const path = require('path');
+// Crear nuevo usuario
+exports.createUser = async (req, res) => {
 
-// Ruta absoluta al JSON
-const currentFile = path.join(__dirname, '../../src/data/data.json');
+  try {
+    const { username, email, password, role } = req.body;
 
-// Helper para leer JSON siempre fresco
-function readData() {
-  const rawData = fs.readFileSync(currentFile);
-  return JSON.parse(rawData);
-}
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: true, msg: 'Faltan datos obligatorios' });
+    }
 
-// OBTENER TODOS LOS USUARIOS
-exports.getAllUsers = (req, res, next) =>{
-  const response = readData();
-  res.json({ data: response });
-}
+    const existingUser = await User.findOne({
+      where: { email }
+    });
 
-exports.getUserById = (req, res, next) =>{
-  const id = +req.params.id;
-  const users = readData();
-  const user = users.find(u => u.id === id);
+    if (existingUser) {
+      return res.status(400).json({ error: true, msg: 'El email ya está registrado' });
+    }
 
-  if (user) {
-    res.json({ error: false, msg: 'todo ok', data: user });
-  } else {
-    res.json({ error: true, msg: 'invalid data', data: null });
-  }
-}
+    // Encriptar contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-exports.AddNewUser = (req, res, next)=>{
-  const users = readData();
-  const response = { error: false, msg: 'todo ok', data: null };
+      // CREAR USUARIO
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      role: role || 'Cliente'
+    });
 
-  if (req.body.name && req.body.age) {
-
-    const dataSave = {
-      id: users.length + 1,
-      name: req.body.name,
-      age: req.body.age,
+    const userResponse = {
+      id: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role,
+      createdAt: newUser.createdAt,
     };
-    users.push(dataSave);
 
-    fs.writeFile(currentFile, JSON.stringify(users, null, 2), err => {
-      if (err) {
-        response.error = true;
-        response.msg = 'Server Error';
-      }
+    res.status(201).json({
+      error: false,
+      msg: 'Usuario creado exitosamente',
+      data: userResponse
     });
 
-    response.data = dataSave;
-  } else {
-    response.error = true;
-    response.msg = 'invalid data';
+  } catch (error) {
+    console.error('❌ Error al crear usuario:', error);
+    res.status(500).json({ error: true, msg: 'Error en el servidor' });
   }
-
-  res.json(response);
-}
-
-exports.DeleteUserById = (req, res, next) =>{
-  let users = readData();
-  const response = { error: false, msg: 'todo ok', id: null };
-
-  if (users.some(user => +user.id === +req.params.id)) {
-    users = users.filter(user => +user.id !== +req.params.id);
-    response.id = req.params.id;
-
-    fs.writeFile(currentFile, JSON.stringify(users, null, 2), err => {
-      if (err) {
-        response.error = true;
-        response.msg = 'Server Error';
-      }
-    });
-  } else {
-    response.error = true;
-    response.msg = 'invalid data';
-  }
-
-  res.json(response);
-}
+};

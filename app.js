@@ -16,7 +16,6 @@ app.use(env.API, routes);
     await sequelize.authenticate();
     console.log('✅ Conexión a la base de datos establecida correctamente.');
 
-    // 🔹 Esto ahora sí incluye User
     await sequelize.sync({ alter: true });
     console.log('📦 Modelos sincronizados con la base de datos.');
 
