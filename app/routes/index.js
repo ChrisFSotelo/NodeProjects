@@ -2,8 +2,7 @@ const express = require('express');
 const app = express();
 
 // IMPORT RUTES
-const userRoutes = require('./users.routes.js');
-
+const userRoutes = require('./users.routes');
 // USE ROUTES
 app.use('/users',userRoutes);
 
