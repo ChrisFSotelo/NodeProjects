@@ -1,11 +1,11 @@
 const routes = require('./app/routes');
-
+const env = require('./app/utils/config');
 const express = require('express');
 const cors = require('cors');
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-app.use(routes);
+app.use(env.API ,routes);
 //puerto
-app.listen(8000);
+app.listen(env.PORT);
