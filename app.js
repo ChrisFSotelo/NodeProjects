@@ -75,6 +75,24 @@ app.post('/api/v1/users', function(req,res){
 });
 
 
+// DELETE USER
+
+app.delete('/api/v1/users/:id/', function(req, res) {
+  let currentData = data;
+  const response = {error: false, msg: 'todo ok', id: null};
+  if(data.filter(user => +user.id === +req.params.id).length > 0){
+    currentData = currentData.filter(user => +user.id !== +req.params.id);
+    response.id = req.params.id;
+    fs.writeFile('./src/data/data.json', JSON.stringify(currentData), (err) =>{
+        response.error = true;
+        response.msg =  'Server Error';
+      });
+    }else{
+      response.error = true;
+      response.msg = 'invalid data'
+    }
+    res.json(response)
+});
 
 
 app.listen(port);
