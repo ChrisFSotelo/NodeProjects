@@ -107,3 +107,89 @@ exports.getFacturas = async (req, res) => {
   }
 };
 
+exports.getFacturaPorId = async (req, res) => {
+  const { facturaId, clienteId } = req.params;
+
+  try {
+    // Buscar la factura y traer cliente y productos
+    const factura = await Facturas.findOne({
+      where: { id: facturaId, clienteId }, // Asegura que la factura pertenece al cliente
+      include: [
+        { model: User, as: 'cliente', attributes: ['id', 'username', 'email'] },
+        { model: Products, as: 'productos', through: { attributes: ['cantidad', 'precioVenta'] } }
+      ]
+    });
+
+    if (!factura) return res.status(404).json({ msg: 'Factura no encontrada para este cliente' });
+
+    // Formatear la respuesta
+    const facturaFormateada = {
+      factura: {
+        id: factura.id,
+        subtotal: factura.subtotal,
+        iva: factura.iva,
+        total: factura.total,
+        fechaCompra: factura.createdAt
+      },
+      cliente: {
+        id: factura.cliente.id,
+        username: factura.cliente.username,
+        email: factura.cliente.email
+      },
+      productos: factura.productos.map(p => ({
+        id: p.id,
+        name: p.name,
+        cantidad: p.ProductoFactura.cantidad,
+        precioVenta: p.ProductoFactura.precioVenta
+      }))
+    };
+
+    res.json(facturaFormateada);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Error al obtener la factura' });
+  }
+};
+
+exports.getHistorialProductos = async (req, res) => {
+  const { clienteId } = req.params;
+
+  try {
+    const facturas = await Facturas.findAll({
+      where: { clienteId },
+      include: {
+        model: Products,
+        as: 'productos',
+        through: { attributes: ['cantidad', 'precioVenta'] }
+      },
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Agrupar productos por factura
+    const historial = facturas.map(factura => ({
+      facturaId: factura.id,
+      fechaCompra: factura.createdAt,
+      subtotal: factura.subtotal,
+      iva: factura.iva,
+      total: factura.total,
+      productos: factura.productos.map(p => ({
+        productoId: p.id,
+        nombre: p.name,
+        cantidad: p.ProductoFactura.cantidad,
+        precioVenta: p.ProductoFactura.precioVenta,
+        totalProducto: (p.ProductoFactura.cantidad * p.ProductoFactura.precioVenta).toFixed(2)
+      }))
+    }));
+
+    res.json(historial);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Error al obtener historial de productos' });
+  }
+};
+
+
+
+
