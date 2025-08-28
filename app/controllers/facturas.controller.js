@@ -76,9 +76,34 @@ exports.getFacturas = async (req, res) => {
         { model: Products, as: 'productos', through: { attributes: ['cantidad', 'precioVenta'] } }
       ]
     });
-    res.json(facturas);
+
+    // TRANSFORMAR EL ARREGLO CON .MAP
+    const facturasFormateadas = facturas.map(f => ({
+      factura: {
+        id: f.id,
+        subtotal: f.subtotal,
+        iva: f.iva,
+        total: f.total,
+        fechaCompra: f.createdAt
+      },
+      cliente: {
+        id: f.cliente.id,
+        username: f.cliente.username,
+        email: f.cliente.email
+      },
+      productos: f.productos.map(p => ({
+        id: p.id,
+        name: p.name,
+        cantidad: p.ProductoFactura.cantidad,
+        precioVenta: p.ProductoFactura.precioVenta
+      }))
+    }));
+
+    res.json(facturasFormateadas);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: 'Error al obtener facturas' });
   }
 };
+
