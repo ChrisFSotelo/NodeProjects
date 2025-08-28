@@ -59,3 +59,64 @@ exports.getProducts = async (req, res) => {
     return res.status(500).json({ message: "Error en el servidor", error: error.message });
   }
 };
+// ACTUALIZAR PRODUCTO
+exports.updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;//ID DEL PRODUCTO COMO PARAMETRO PARA UBICARLO
+    const { lote, name, price, available_quantity, entry_date } = req.body;
+
+    // BUSCAR EL PRODUCTO 
+    const product = await Products.findByPk(id);
+    if (!product) {
+      return res.status(404).json({ message: "Producto no encontrado" });
+    }
+
+    //VALIDAR LOS CAMPOS ENVIADOS
+    if (!lote && !name && !price && !available_quantity && !entry_date) {
+      return res.status(400).json({ message: "Debes enviar al menos un campo para actualizar" });
+    }
+
+    // ACTUALIZAR DATOS DEL PRODUCTO, IGNORANDO LOS DATOS NO ENVIADOS
+    if (lote !== undefined) product.lote = lote;
+    if (name !== undefined) product.name = name;
+    if (price !== undefined) product.price = price;
+    if (available_quantity !== undefined) product.available_quantity = available_quantity;
+    if (entry_date !== undefined) product.entry_date = entry_date;
+
+    await product.save();
+
+    return res.status(200).json({
+      message: "Producto actualizado exitosamente",
+      product
+    });
+
+  } catch (error) {
+    console.error('❌ Error al actualizar producto:', error);
+    return res.status(500).json({ message: "Error en el servidor", error: error.message });
+  }
+};
+// ELIMINAR PRODUCTO
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // BUSCAR EL PRODUCTO
+    const product = await Products.findByPk(id);
+    if (!product) {
+      return res.status(404).json({ message: "Producto no encontrado" });
+    }
+
+    // ELIMINAR EL PRODUCTO
+    await product.destroy();
+
+    return res.status(200).json({
+      message: "Producto eliminado exitosamente"
+    });
+
+  } catch (error) {
+    console.error('❌ Error al eliminar producto:', error);
+    return res.status(500).json({ message: "Error en el servidor", error: error.message });
+  }
+};
+
+
