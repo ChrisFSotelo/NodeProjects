@@ -1,0 +1,61 @@
+const { Products } = require('../models');
+
+// CREAR NUEVO PRODUCTO
+exports.createProduct = async (req, res) => {
+  try {
+    const { lote, name, price, available_quantity, entry_date } = req.body;
+
+    // VALIDAR QUE LOS DATOS SE ENCUENTREN EN LA RESPUESTA
+    if (!lote || !name || !price || !available_quantity|| !entry_date) {
+      return res.status(400).json({ message: "Todos los campos son obligatorios" });
+    }
+
+    // BUSCAR EL LOTE REGISTRADO
+    const existingProduct = await Products.findOne({ 
+      where: { lote } 
+    });
+    // VALIDAR QUE EL LOTE NO SE ENCUENTRE REGISTRADO
+    if (existingProduct) {
+      return res.status(409).json({ message: "Ya existe un producto con ese lote" });
+    }
+
+     // CREAR OBJETO PRODUCTO
+    const product = await Products.create({
+      lote,
+      name,
+      price,
+      available_quantity,
+      entry_date
+    });
+
+    return res.status(201).json({
+      message: "Producto creado exitosamente",
+      product
+    });
+
+  } catch (error) {
+    console.error('❌ Error al crear el producto:',error);
+    return res.status(500).json({ message: "Error en el servidor", error: error.message });
+  }
+};
+
+// LISTAR PRODUCTOS
+exports.getProducts = async (req, res) => {
+  try {
+    const total = await Products.count(); // CONSULTA DE MODELOS CONTAR NUMERO DE REGISTROS 
+
+    const products = await Products.findAll({
+      order: [['entry_date', 'DESC']] //CONSULTA DE MODELOS ORDER BY (sequelize)
+    });
+
+    return res.status(200).json({
+      message: "Lista de productos",
+      total,
+      products
+    });
+
+  } catch (error) {
+    console.error('❌ Error al obtener productos:', error);
+    return res.status(500).json({ message: "Error en el servidor", error: error.message });
+  }
+};

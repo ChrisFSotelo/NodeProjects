@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const { User } = require('../models');
 
-// Crear nuevo usuario
+// CREAR NUEVO USUARIO
 exports.createUser = async (req, res) => {
 
   try {
@@ -11,7 +11,7 @@ exports.createUser = async (req, res) => {
     if (!username || !email || !password) {
       return res.status(400).json({ error: true, msg: 'Faltan datos obligatorios' });
     }
-    // BUSCAR EL EMAIL RECIBIDO
+    // BUSCAR EL EMAIL REGISTRADO
     const existingUser = await User.findOne({
       where: { email }
     });
@@ -51,6 +51,7 @@ exports.createUser = async (req, res) => {
   }
 };
 
+//AUTENTICAR USUARIO
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
